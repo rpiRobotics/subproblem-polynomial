@@ -1,4 +1,3 @@
-% kin = hardcoded_IK_setups.yumi_fixed_q3.get_kin
 %%
 % pi_sym = sym(pi);
 % 
@@ -65,15 +64,15 @@ diagrams.redraw;
 close
 R_06 = eye(3);
 % T = [300; 70; 160];
-T = [200 200 200]';
+% T = [200 200 200]';
 % T = rand_vec*500;
 % T =[  254
 %  -130
 %    68]
 
-% T =[50
-%  -355
-%   354]
+T =[50
+ -355
+  354]
 
 % [R_06, T] = fwdkin(kin_double, rand_angle([6 1]))
 
@@ -86,50 +85,9 @@ kin_double.P = double(kin.P);
 
 [R_06_t, T_t] = fwdkin(kin_double, Q(:,1))
 view(0,-90)
+
 %%
-p_0T = T;
-p_06 = p_0T - kin.P(:,1) - R_06*kin.P(:,7);
-
-syms x1 x2 x3 x5 real
-R_01 = half_tan_rot(kin.H(:,1), x1);
-R_12 = half_tan_rot(kin.H(:,2), x2);
-R_23 = half_tan_rot(kin.H(:,3), x3);
-% R_34 = half_tan_rot(kin.H(:,4), x4);
-R_45 = half_tan_rot(kin.H(:,5), x5);
-
-[lhs_1, lhs_2, R_34] = half_tan_sp5_R( ...
-    -kin.P(:,4), ...
-    R_12'*(R_01'*p_06-kin.P(:,2))-kin.P(:,3), ...
-    kin.P(:,5), ...
-    kin.P(:,6), ...
-    -kin.H(:,3), kin.H(:,4), kin.H(:,5), [x3 x5]);
-
-% Error eqns
-% R_05 = R_01 * R_12 * R_23 * R_34 * R_45;
-%lhs_err = R_05 * kin.H(:,6) - R_06 * kin.H(:,6); % 3 equations
-%lhs_err = (R_06 * kin.H(:,6))'*  R_05 * kin.H(:,6) -1
-lhs_err_1 = kin.H(:,3)'*R_34*R_45*kin.H(:,6) - kin.H(:,3)'*(R_01*R_12)'*R_06*kin.H(:,6); % No x3
-lhs_err_2 = kin.H(:,4)'*R_45*kin.H(:,6) - kin.H(:,4)'*(R_01*R_12*R_23)'*R_06*kin.H(:,6); % No x4
-
-% lhs_err_3 = kin.H(:,1)'*R_12 * R_23 * R_34 * R_45 * kin.H(:,6) - kin.H(:,1)'*R_06*kin.H(:,6); % no x1
-% lhs_err_4 = kin.H(:,2)'*R_23 * R_34 * R_45 * kin.H(:,6) - kin.H(:,2)'* R_01' * R_06*kin.H(:,6); % no x2
-% lhs_err_5 = kin.H(:,5)'*kin.H(:,6) - kin.H(:,5)'*(R_01*R_12*R_23*R_34)'*R_06*kin.H(:,6); % No x5
-
-
-eqns_lhs = [lhs_err_1; lhs_err_2; lhs_1; lhs_2];
-
-eqns_lhs = simplify(eqns_lhs)
-
-
-eqns_frac = simplifyFraction(eqns_lhs)
-eqns_num = numden(eqns_frac)
-%%
-fileID = fopen('yumi_eqns.txt','w');
-for i = 1:length(eqns_num)
-    fprintf(fileID, "p%i = ", i);
-    % fprintf(fileID, string(vpa(eqns_num(i), 6)) + '\n');
-    fprintf(fileID, string(eqns_num(i)) + '\n');
-end
+polynomial_IK.general_6R(kin, R_06, T - kin.P(:,1) - R_06*kin.P(:,7), 'yumi_eqns.txt')
 
 %% Test eqns
 
@@ -150,15 +108,12 @@ x_12 = [-3.183561363129973		0.43234343786735896
  5.567667636297536		-0.47736482122261414]';
 
 Q_12 = 2*atan(x_12);
+%%
+kin_double.joint_type = kin.joint_type;
+kin_double.H = double(kin.H);
+kin_double.P = double(kin.P);
 
-Q = [];
-for i = 1:8
-q_12 = Q_12(:,i)
-[e_vec, Q_i, is_LS_vec] = alignment_err_given_q12(q_12(1), q_12(2), T, R_06, kin_double)
-i_soln = e_vec<1e-6;
-Q = [Q Q_i(:,i_soln)];
-end
-disp(Q)
+Q = polynomial_IK.general_6R_given_q12(kin_double, R_06, T, Q_12)
 
 %%
 filename = "yumi_solns.gif";
@@ -199,36 +154,3 @@ q = Q(:,8)
 [R_t, p_t] = fwdkin(kin_double, q)
 R_t - R_06
 p_t - T
-
-function [e_vec, Q, is_LS_vec] = alignment_err_given_q12(q1, q2, p_16, R_06, kin)
-    e_vec = NaN([1 4]);
-    Q = NaN([6 4]);
-    is_LS_vec = NaN([2 4]);
-    % find up to 4 solutions of (q3, q4, q5) using Subproblem 5
-    p_63 = rot(-kin.H(:,2),q2) * (rot(-kin.H(:,1),q1)*p_16 - kin.P(:,2)) - kin.P(:,3);
-    [t3, t4, t5] = subproblem.sp_5( ...
-                   -kin.P(:,4), p_63, kin.P(:,5), kin.P(:,6), ...
-                   -kin.H(:,3), kin.H(:,4), kin.H(:,5));
-    for i_q345 = 1:length(t3)
-        q3 = t3(i_q345);
-        q4 = t4(i_q345);
-        q5 = t5(i_q345);
-
-        % Calculate alignment error for h_6
-        R_05 = rot(kin.H(:,1),q1)*rot(kin.H(:,2),q2) ...
-            * rot(kin.H(:,3),q3)*rot(kin.H(:,4),q4) ...
-            * rot(kin.H(:,5),q5);
-
-        e_vec(i_q345) = norm(R_05*kin.H(:,6)-R_06*kin.H(:,6));
-
-        if nargout > 1
-            % Find q6 with subproblem 1
-            p = kin.H(:,5); % Can't be collinear with h_6
-            [q6, q6_is_ls] = subproblem.sp_1(p, R_05'*R_06*p, kin.H(:,6));
-            % TODO: q6_is_ls will tend to be true since e_i isn't exactly 0
-
-            Q(:,i_q345) = [q1; q2; q3; q4; q5; q6];
-            is_LS_vec(:,i_q345) = [q6_is_ls; e_vec(i_q345)];
-        end
-    end
-end

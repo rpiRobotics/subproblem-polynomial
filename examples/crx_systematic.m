@@ -1,8 +1,10 @@
 kin = define_CRX;
-%R_06 = eye(3);
-%p_0T = [0.25; 0.25; 0.25];
-% [R_06, p_0T] = fwdkin(kin, rand_angle([7 1]))
 
+%% Easier example pose
+R_06 = eye(3);
+p_0T = [0.25; 0.25; 0.25];
+
+%% Harder example pose
 ex = [1;0;0];
 ey = [0;1;0];
 ez = [0;0;1];
@@ -13,43 +15,20 @@ R_06 = rot(ez, deg2rad(30))*rot(ey, deg2rad(20))*rot(ex, deg2rad(10));
 p_0T = [3141; 5926; 5358]/10000;
 
 
-%%
+% [R_06, p_0T] = fwdkin(kin, rand_angle([7 1]))
+%% Symbolic pose
+
 % syms alpha beta gamma 
 syms t1 t2 t3 real
 %R_06 = rot(ez, gamma)*rot(ey, beta)*rot(ex, alpha);
 syms R11 R12 R13 R21 R22 R23 R31 R32 R33  real
 R_06 = [R11 R12 R13; R21 R22 R23; R31 R32 R33]
 p_0T = [t1 t2 t3]' + kin.P(:,1) - R_06*kin.P(:,7);
-%%
+%% Solve using search-based method
 [Q, is_LS_vec] = IK_3_pairs_intersecting(double(R_06),p_0T,kin, true)
 
 %%
 [R_test, T_test] = fwdkin(kin, Q(:,1))
-%%
-syms x1 x2 x3 x4 real
-R_01 = half_tan_rot(kin.H(:,1), x1);
-R_12 = half_tan_rot(kin.H(:,2), x2);
-R_23 = half_tan_rot(kin.H(:,3), x3);
-R_34 = half_tan_rot(kin.H(:,4), x4);
-
-% Error eqn
-R_04 = R_01 * R_12 * R_23 * R_34;
-lhs_err = kin.H(:,5)' * R_04.' * R_06* kin.H(:,6) - kin.H(:,5)'*kin.H(:,6);
-
-% x3 eqn
-p_16 = p_0T - kin.P(:,1) - R_06*kin.P(:,7);
-R_34 = half_tan_rot(kin.H(:,4), x4);
-[~, a, b, c] = half_tan_sp3(R_34*kin.P(:,5), -kin.P(:,3), kin.H(:,3), norm(p_16));
-lhs_x3 = a*x3^2 + b*x3 + c;
-
-% x1 and x2 eqn
-[~, ~, a1, b1, c1, a2, b2, c2] = half_tan_sp2(p_16, kin.P(:,3)+R_23*R_34*kin.P(:,5), -kin.H(:,1), kin.H(:,2));
-
-lhs_x1 = a1*x1^2 + b1*x1 + c1;
-lhs_x2 = a2*x2^2 + b2*x2 + c2;
-
-eqns_lhs = [lhs_err; lhs_x1; lhs_x2; lhs_x3];
-eqns_lhs = simplify(eqns_lhs)
 
 %% Alternate approach with Subproblem 5
 syms x1 x2 x4 real
@@ -70,36 +49,18 @@ lhs_err = kin.H(:,5)' * R_04.' * R_06* kin.H(:,6) - kin.H(:,5)'*kin.H(:,6);
 eqns_lhs = [lhs_err; lhs_1; lhs_2];
 eqns_lhs = simplify(eqns_lhs)
 
-%%
+
 eqns_frac = simplifyFraction(eqns_lhs)
 eqns_num = numden(eqns_frac)
 
-%%
 fileID = fopen('crx_eqns.txt','w');
 for i = 1:length(eqns_num)
     fprintf(fileID, "p%i = ", i);
     % fprintf(fileID, string(vpa(eqns_num(i))) + '\n');
     fprintf(fileID, string(eqns_num(i)) + '\n');
 end
-%% Test eqns
 
-q = Q(:,1);
-x = tan(q/2);
-
-double(subs(eqns_lhs(1), [x1 x2 x4], x([1 2 4])' ))
-double(subs(eqns_num(1), [x1 x2 x4], x([1 2 4])' ))
-%% Test eqns
-
-q = Q(:,1);
-x = tan(q/2);
-
-double(subs(eqns_lhs(4), [x1 x2 x3 x4], x([1 2 3 4])' ))
-double(subs(eqns_num(4), [x1 x2 x3 x4], x([1 2 3 4])' ))
 %%
-p1 = eqns_num(1)
-p2 = eqns_num(2)
-p3 = eqns_num(3)
-p4 = eqns_num(4)
 
 % dr = ResourceFunction["DixonResultant"][{p1, p2, p3, p4}, {x1, x2, x3}]
 % Factor[dr]

@@ -61,13 +61,16 @@ for i = 1:length(eqns_num)
 end
 
 %%
+polynomial_IK.three_pairs_intersecting(kin, R_06, p_0T, 'crx_eqns.txt')
 
 % dr = ResourceFunction["DixonResultant"][{p1, p2, p3, p4}, {x1, x2, x3}]
 % Factor[dr]
-% p_star = FactorList[dr][[12]][[1]]
-% x4 /. NSolve[pstar[[1]], x4, Reals]
+% pstar = FactorList[dr][[12]][[1]]
+% x4 /. NSolve[pstar, x4, Reals]
 %%
-x_roots = [-1.22679,-1.2064,-1.11032,-0.859648,-0.289665,-0.221697,-0.0587106,-0.0469804,0.0696124,0.0728794,0.109625,0.110009,0.113632,0.113664,0.118011,0.11978,0.216534,0.299297,0.308924,0.335465,0.341205,0.377572,0.78967,0.810497,0.820178,0.820773,0.831854,0.836245,0.888068,0.975219,0.995004,1.00933,1.03066,1.08293,1.17454,1.4093,1.68159,1.83729,1.87804,2.10455,2.1127,2.11546,2.15015,2.1889,2.19365,2.20063,2.21036,2.25812,2.37865,2.52261,3.41518,3.44777]
+x_roots = [-3.07428487489949, -1.7429090251912485, -0.6410722219542363, ...
+-0.21689616352170946, 0.3252788992213006, 0.5737534119947945, ...
+1.5598866488889704, 4.610501097682664]
 theta_roots = 2*atan(x_roots);
 
 real_theta = theta_roots(imag(theta_roots)==0)
@@ -77,11 +80,13 @@ real_theta = theta_roots(imag(theta_roots)==0)
 % xline(real(theta_roots), 'r')
 xline(real_theta, 'r')
 
-%%
-R_01 = rot(kin.H(:,1), q(1));
-R_12 = rot(kin.H(:,2), q(2));
-R_23 = rot(kin.H(:,3), q(3));
-R_34 = rot(kin.H(:,4), q(4));
+%% Find remaining joint angles
 
--kin.P(:,3) + R_12'*R_01'*p_16
-R_23*R_34*kin.P(:,5)
+Q = polynomial_IK.three_pairs_intersecting_given_q4(kin, R_06, p_0T, real_theta)
+
+[R_06_t, p_0T_t] = fwdkin(kin, Q(:,1));
+R_06 - R_06_t
+p_0T - p_0T_t
+
+
+

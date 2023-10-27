@@ -1,8 +1,9 @@
 function Q = three_pairs_intersecting_given_q4(kin, R_06, p_0T, Q_4)
 Q = [];
+is_LS_vec = [];
 for i_q4 = 1:length(Q_4)
     [e, Q_partial] = alignment_err_given_q4(Q_4(i_q4), p_0T, R_06, kin);
-    soln_num = e < 1e-6;
+    soln_num = abs(e) < 1e-6;
     q_partial = Q_partial(:,soln_num);
 
     R_04 = rot(kin.H(:,1),q_partial(1)) * rot(kin.H(:,2),q_partial(2)) ...
@@ -11,7 +12,7 @@ for i_q4 = 1:length(Q_4)
     [q6, q6_is_LS] = subproblem.sp_1(kin.H(:,5), R_06'*R_04*kin.H(:,5), -kin.H(:,6));
     q_i = [q_partial; q5; q6];
     Q = [Q q_i];
-    is_LS_vec = [is_LS_vec [q5_is_LS; q6_is_LS; e(soln_num_vec(:,i_q4))] ];
+    is_LS_vec = [is_LS_vec [q5_is_LS; q6_is_LS; e(soln_num)] ];
 end
 end
 

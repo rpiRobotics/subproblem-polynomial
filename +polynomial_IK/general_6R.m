@@ -1,4 +1,4 @@
-function general_6R(kin, R_06, p_06, filename)
+function eqns_num = general_6R(kin, R_06, p_06, filename)
 syms x1 x2 x3 x5 real
 R_01 = half_tan_rot(kin.H(:,1), x1);
 R_12 = half_tan_rot(kin.H(:,2), x2);

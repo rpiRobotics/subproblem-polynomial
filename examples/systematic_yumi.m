@@ -1,45 +1,24 @@
-%%
-% pi_sym = sym(pi);
-% 
-% alpha_vec = 2*pi_sym/360*[-90 90 -90 -90 -90 90 0];
-% a_vec     = [-30 30 40.5 40.5 27 -27 0];
-% d_vec     = [166 0 251.5 0 265 0 36];
-% 
-% kin_full = dh_to_kin(alpha_vec, a_vec, d_vec);
-% 
-% [kin, R_6T] = fwdkin_partial(kin_full, pi_sym/2, 3);
-% 
-% kin_full.P(:,end) = 0;
-% 
-% [R_t, p_t] = fwdkin(kin_full, 2*pi_sym/360*([0 0 0 -90 180 0 0]))
-%%
+%% Full 7-dof kinematics
+
+kin_full = define_yumi();
+
+%% 6-dof by fixing q_3 = pi/2
 pi_sym = sym(pi);
-ex = [1;0;0];
-ey = [0;1;0];
-ez = [0;0;1];
-zv = [0;0;0];
-
-kin_full.joint_type = zeros([1 7]);
-kin_full.H = [ez ey ez ey ex ey ex];
-kin_full.P = [zv 166*ez-30*ex 30*ex 251.5*ez+40.5*ex 40.5*ez 265*ex-27*ez 27*ez zv];
-
-% [R_t, p_t] = fwdkin(kin_full, zeros([7 1]))
-
 [kin, R_6T] = fwdkin_partial(kin_full, pi_sym/2, 3);
 
-%% Instead, fix q1
+R_06 = eye(3);
 
+T =[50
+ -355
+  354];
+%% Instead, fix q1
 [kin, R_6T] = fwdkin_partial(kin_full, 0, 1);
 kin.P(:,1) = 0;
 
 %% Different q_3
-
 [kin, R_6T] = fwdkin_partial(kin_full, pi_sym/6, 3);
 kin.P = rot(ez,-pi_sym/6)*kin.P;
 kin.H = rot(ez,-pi_sym/6)*kin.H;
-%%
-% R_06 = rot([0 1 0]', pi_sym/2)
-% T = [200 200 200]'
 %% Plot robot pose
 diagrams.setup;
 hold on
@@ -61,21 +40,6 @@ diagrams.robot_plot(kin_double, zeros([6 1]), options{:});
 hold off
 diagrams.redraw;
 %% Make sure search-based IK works
-close
-R_06 = eye(3);
-% T = [300; 70; 160];
-% T = [200 200 200]';
-% T = rand_vec*500;
-% T =[  254
-%  -130
-%    68]
-
-T =[50
- -355
-  354]
-
-% [R_06, T] = fwdkin(kin_double, rand_angle([6 1]))
-
 kin_double.joint_type = kin.joint_type;
 kin_double.H = double(kin.H);
 kin_double.P = double(kin.P);
@@ -86,16 +50,15 @@ kin_double.P = double(kin.P);
 [R_06_t, T_t] = fwdkin(kin_double, Q(:,1))
 view(0,-90)
 
-%%
-polynomial_IK.general_6R(kin, R_06, T - kin.P(:,1) - R_06*kin.P(:,7), 'yumi_eqns.txt')
+%% Output system of multivariate polynomials
+eqns = polynomial_IK.general_6R(kin, R_06, T - kin.P(:,1) - R_06*kin.P(:,7), 'yumi_eqns.txt')
 
 %% Test eqns
-
 q = Q(:,1);
 x = tan(q/2)
 
-double(subs(eqns_lhs(4), [x1 x2 x3 x5], x([1 2 3 5])'))
-double(subs(eqns_num(4), [x1 x2 x3 x5], x([1 2 3 5])'))
+double(subs(eqns(4), [x1 x2 x3 x5], x([1 2 3 5])'))
+double(subs(eqns(4), [x1 x2 x3 x5], x([1 2 3 5])'))
 
 %% Get remaining joint angles
 x_12 = [-3.183561363129973		0.43234343786735896
@@ -108,14 +71,21 @@ x_12 = [-3.183561363129973		0.43234343786735896
  5.567667636297536		-0.47736482122261414]';
 
 Q_12 = 2*atan(x_12);
-%%
+
 kin_double.joint_type = kin.joint_type;
 kin_double.H = double(kin.H);
 kin_double.P = double(kin.P);
 
 Q = polynomial_IK.general_6R_given_q12(kin_double, R_06, T, Q_12)
 
-%%
+%% Test solutions
+q = Q(:,8)
+[R_t, p_t] = fwdkin(kin_double, q)
+R_t - R_06
+p_t - T
+
+%% Make gif showing all solutions
+
 filename = "yumi_solns.gif";
 clear im
 for i = 1:8
@@ -149,8 +119,3 @@ for idx = 1:length(im)
         imwrite(A,map,filename,"gif","WriteMode","append","DelayTime",0.5);
     end
 end
-%%
-q = Q(:,8)
-[R_t, p_t] = fwdkin(kin_double, q)
-R_t - R_06
-p_t - T

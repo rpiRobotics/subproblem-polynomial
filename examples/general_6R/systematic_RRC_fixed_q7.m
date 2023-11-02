@@ -26,7 +26,7 @@ kin_num.P = double(kin.P);
 R_06 = eye(3);
 p_0T = [20;20;20];
 
-[Q, is_LS_vec] = IK.IK_gen_6_dof(R_06, p_0T, kin_num)
+[Q, is_LS_vec] = IK.IK_gen_6_dof_mex(R_06, p_0T, kin_num)
 
 
 [R_06_t, T_t] = fwdkin(kin, Q(:,1))

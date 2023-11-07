@@ -9,21 +9,37 @@ ex = [1;0;0];
 ey = [0;1;0];
 ez = [0;0;1];
 zv = [0;0;0];
-R_06 = rot(ez, deg2rad(30))*rot(ey, deg2rad(20))*rot(ex, deg2rad(10));
-% R_06 = rot(ez, deg2rad(sym(30)))*rot(ey, deg2rad(sym(20)))*rot(ex, deg2rad(sym(10)));
+
+% H_6 is e_y, so make sure right-most rotation is about e_y
+
+% R_06 = rot(ey, deg2rad(30))*rot(ex, deg2rad(20))*rot(ey, deg2rad(10));
+% R_06 = rot(ey, deg2rad(3))*rot(ex, deg2rad(2))*rot(ey, deg2rad(1));
+R_06 = rot(ey, deg2rad(3.12))*rot(ex, deg2rad(2.25))*rot(ey, deg2rad(1));
+
+% R_06 = rot(ey, deg2rad(sym(30)))*rot(ex, deg2rad(sym(20)))*rot(ey, deg2rad(sym(10)));
 % p_0T = [1415; 9265; 3589]/10000;
 p_0T = [3141; 5926; 5358]/10000;
 
 
 % [R_06, p_0T] = fwdkin(kin, rand_angle([7 1]))
 %% Symbolic pose
+ex = [1;0;0];
+ey = [0;1;0];
+ez = [0;0;1];
+zv = [0;0;0];
 
-% syms alpha beta gamma 
+syms a b g
+alpha = a
+beta= b
+gamma = g
+R_06 = rot(ey, gamma)*rot(ex, beta)*rot(ey, alpha);
+
+% syms R11 R12 R13 R21 R22 R23 R31 R32 R33  real
+% R_06 = [R11 R12 R13; R21 R22 R23; R31 R32 R33]
+
 syms t1 t2 t3 real
-%R_06 = rot(ez, gamma)*rot(ey, beta)*rot(ex, alpha);
-syms R11 R12 R13 R21 R22 R23 R31 R32 R33  real
-R_06 = [R11 R12 R13; R21 R22 R23; R31 R32 R33]
 p_0T = [t1 t2 t3]' + kin.P(:,1) - R_06*kin.P(:,7);
+
 %% Solve using search-based method
 [Q, is_LS_vec] = IK_3_pairs_intersecting(double(R_06),p_0T,kin, true)
 

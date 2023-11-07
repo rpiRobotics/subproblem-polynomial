@@ -14,16 +14,28 @@ q = rand_angle([6 1]);
 
 
 %% zero offsets 
-
+ex = [1;0;0];
+ey = [0;1;0];
+ez = [0;0;1];
+zv = [0;0;0];
 kin.H = [ez ey ez ey ez ey];
 kin.P = [ez zv ex zv ex zv ex];
 kin.joint_type = zeros(1,6);
 
 R_06 = eye(3);
 p_0T = [0; -1.5; 1.5];
+
+%%
+
+syms T1 T2 T3 real
+syms R [3 3] real
+
+R_06 = R
+p_06 = [T1 T2 T3]'
 %%
 [Q, is_LS_vec] = IK_3_pairs_intersecting(R_06,p_0T,kin, true)
-
+%%
+polynomial_IK.three_pairs_intersecting(kin, R_06, p_06, 'sys_2R_2R_2R.txt')
 
 %%
 

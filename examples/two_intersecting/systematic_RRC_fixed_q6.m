@@ -1,7 +1,14 @@
+%% Radical definition
+
 kin = define_RRC_fixed_q6();
 
 kin.P(:,end) = 0;
 kin.P(1,5) = round(kin.P(1,5)*1000)/1000;
+
+%% Rational definition
+
+kin = define_RRC_fixed_q6_rational();
+kin.P(:,end) = 0;
 %%
 q = zeros([7 1]);
 
@@ -22,6 +29,21 @@ assert(dot(ez,kin.H(:,6)) == 0)
 syms t1 t2 t3 real
 p_0T = [t1 t2 t3]' + kin.P(:,1) - R_06*kin.P(:,7);
 
+
+%% Symbolic rational pose
+
+ex = [1;0;0];
+ey = [0;1;0];
+ez = [0;0;1];
+zv = [0;0;0];
+
+syms xa xb xg
+%R_06 = half_tan_rot(ey, xg)*half_tan_rot(ez, xb)*half_tan_rot(kin.H(:,6), xa);
+R_06 = half_tan_rot(ey, xg)*half_tan_rot(ez, xb);
+
+syms t1 t2 t3 real
+p_0T = [t1 t2 t3]';
+
 %% Easy pose
 
 R_06 = eye(3);
@@ -31,7 +53,9 @@ p_0T = [30;20;20];
 R_06 = rot(ey, deg2rad(30))*rot(ez, deg2rad(20))*rot(kin.H(:,6), deg2rad(10));
 R_06 = double(R_06);
 p_0T = [30.12;20.34;20.56];
-
+%%
+[Nb, Db] = rat(tan(deg2rad(20)/2), 1e-6)
+[Ng, Dg] = rat(tan(deg2rad(30)/2), 1e-6)
 %%
 R_06 = rot(ey, deg2rad(0))*rot(ez, deg2rad(20))*rot(kin.H(:,6), deg2rad(10));
 R_06 = double(R_06);

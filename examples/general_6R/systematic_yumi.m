@@ -5,12 +5,49 @@ kin_full = define_yumi();
 %% 6-dof by fixing q_3 = pi/2
 pi_sym = sym(pi);
 [kin, R_6T] = fwdkin_partial(kin_full, pi_sym/2, 3);
-
+%% Easy pose
 R_06 = eye(3);
 
 T =[50
  -355
   354];
+%% Hard pose
+R_06 = rot(ey, deg2rad(30))*rot(ez, deg2rad(20))*rot(kin.H(:,6), deg2rad(10));
+R_06 = double(R_06);
+
+T =[50.12
+ -355.34
+  354.56];
+%% Symbolic pose
+ex = [1;0;0];
+ey = [0;1;0];
+ez = [0;0;1];
+zv = [0;0;0];
+
+syms a b g
+alpha = a;
+beta = b;
+gamma = g;
+R_06 = rot(ey, gamma)*rot(ez, beta)*rot(kin.H(:,6), alpha);
+
+assert(dot(ez,kin.H(:,6)) == 0)
+
+syms t1 t2 t3 real
+T = [t1 t2 t3]';
+
+%% Symbolic rational pose
+
+ex = [1;0;0];
+ey = [0;1;0];
+ez = [0;0;1];
+zv = [0;0;0];
+
+syms xa xb xg
+%R_06 = half_tan_rot(ey, xg)*half_tan_rot(ez, xb)*half_tan_rot(kin.H(:,6), xa);
+R_06 = half_tan_rot(ey, xg)*half_tan_rot(ez, xb);
+
+syms t1 t2 t3 real
+T = [t1 t2 t3]';
 %% Instead, fix q1
 [kin, R_6T] = fwdkin_partial(kin_full, 0, 1);
 kin.P(:,1) = 0;
@@ -50,9 +87,11 @@ kin_double.P = double(kin.P);
 [R_06_t, T_t] = fwdkin(kin_double, Q(:,1))
 view(0,-90)
 pbaspect([1 1 1/5])
-
+%%
+q1_list = uniquetol(Q(1,:), 1e-2)
+tan(q1_list/2)
 %% Output system of multivariate polynomials
-eqns = polynomial_IK.general_6R(kin, R_06, T - kin.P(:,1) - R_06*kin.P(:,7), 'yumi_eqns.txt')
+eqns = polynomial_IK.general_6R(kin, R_06, T, 'yumi_eqns.txt')
 
 %% Test eqns
 q = Q(:,1);

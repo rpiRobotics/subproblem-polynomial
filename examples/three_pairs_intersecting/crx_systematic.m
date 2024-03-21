@@ -4,6 +4,11 @@ kin = define_CRX;
 R_06 = eye(3);
 p_0T = [0.25; 0.25; 0.25];
 
+
+%% Example pose with endpoints
+R_06 = eye(3);
+p_0T = [   0.1; 0.1; 0.3];
+
 %% Harder example pose
 ex = [1;0;0];
 ey = [0;1;0];
@@ -28,7 +33,7 @@ ey = [0;1;0];
 ez = [0;0;1];
 zv = [0;0;0];
 
-syms a b g
+syms a b g real
 alpha = a
 beta= b
 gamma = g
@@ -90,12 +95,15 @@ for i = 1:length(eqns_num)
 end
 
 %%
-polynomial_IK.three_pairs_intersecting(kin, R_06, p_0T, 'crx_eqns.txt')
+[eqns_num, plot] = polynomial_IK.three_pairs_intersecting(kin, R_06, p_0T, 'crx_eqns.txt')
 
 % dr = ResourceFunction["DixonResultant"][{p1, p2, p3, p4}, {x1, x2, x3}]
 % Factor[dr]
 % pstar = FactorList[dr][[12]][[1]]
 % x4 /. NSolve[pstar, x4, Reals]
+
+%%
+eqns = polynomial_IK.three_pairs_intersecting_indep(kin, R_06, p_0T)
 %%
 x_roots = [-3.07428487489949, -1.7429090251912485, -0.6410722219542363, ...
 -0.21689616352170946, 0.3252788992213006, 0.5737534119947945, ...

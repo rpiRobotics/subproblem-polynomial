@@ -148,7 +148,7 @@ p_0T = double(p_0T);
 
 %%
 % [eqns, eqns2] = polynomial_IK.general_6R(kin, R_06, p_0T, 'hyperplane_eqns.txt');
-polynomial_IK.general_6R(kin, R_06_rat, p_0T, 'hyperplane_eqns.txt');
+eqns_num = polynomial_IK.general_6R(kin, R_06_rat, p_0T, 'hyperplane_eqns.txt');
 
 %% Alternate formulation: search and q1 qnd q6
 p_0T = p_0T;

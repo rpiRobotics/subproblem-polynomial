@@ -77,7 +77,7 @@ diagrams.robot_plot(kin, q, options{:});
 
 hold off
 diagrams.redraw;
-%%
+%% Search-based IK
 kin_num = kin;
 kin_num.P = double(kin.P);
 kin_num.H = double(kin.H);
@@ -97,3 +97,26 @@ tan(Q(4,:)/2)
 
 %%
 polynomial_IK.two_intersecting(kin,R_06, p_0T, 'RRC_fixed_q6_eqns.txt')
+
+
+
+
+
+
+%%
+syms theta
+x4 = tan(theta/2);
+P = x4^10 + 7.9957332906938004840*x4^9 + 71.829437902169774489*x4^8 - 320.39582634852254622*x4^7 - 143.45540174223805211*x4^6 + 1019.3814394286641758*x4^5 + 175.33406704389630542*x4^4 - 1133.1028305538653591*x4^3 - 271.64831216219044916*x4^2 + 424.58471379419422059*x4 + 161.60322241701215186
+hold on
+fplot(-1e-2*P, [-pi pi])
+ylim([-1.5 1])
+xlim([-pi pi])
+hold off
+% yline(0)
+
+%%
+syms x4
+P = x4^10 + 7.9957332906938004840*x4^9 + 71.829437902169774489*x4^8 - 320.39582634852254622*x4^7 - 143.45540174223805211*x4^6 + 1019.3814394286641758*x4^5 + 175.33406704389630542*x4^4 - 1133.1028305538653591*x4^3 - 271.64831216219044916*x4^2 + 424.58471379419422059*x4 + 161.60322241701215186
+xsolns = roots(sym2poly(P))
+complex_solns = xsolns(imag(xsolns) ~= 0)
+xline(2*atan(real(complex_solns)), 'r', LineWidth=2)

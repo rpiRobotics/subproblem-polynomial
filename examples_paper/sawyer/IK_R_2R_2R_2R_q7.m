@@ -14,8 +14,8 @@ is_LS_vec = [];
 
 
 e_fun = @(q7)(alignment_given_q7(q7, kin, R_07, p_0T, psi, SEW_class));
-% [q7_vec, soln_num_vec] = search_1D(e_fun, -pi, pi, 1e4, show_plot);
-[q7_vec, soln_num_vec] = search_1D(e_fun, -1.917,  -1.905, 1e3, show_plot);
+[q7_vec, soln_num_vec] = search_1D(e_fun, -pi, pi, 1e4, show_plot);
+
 
 for i = 1:length(q7_vec)
     [~, q_solns_partial_i] = alignment_given_q7(q7_vec(i), kin, R_07, p_0T, psi, SEW_class);

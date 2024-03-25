@@ -6,7 +6,7 @@ Two intersecting axes
 
 `RRC.m`: Generate the 3 multivariate polynomials and export them. Given the zeros of the polynomial from Maple, find the remaining joint angles.
 
-`RRC_fixed_q6_eqns.txt: System of 3 multivariate polynomials.
+`RRC_fixed_q6_eqns.txt`: System of 3 multivariate polynomials.
 
 `automated_RRC_fixed_q6_rational.mpl`: Maple file to find and solve resultant univariate polynomial.
 

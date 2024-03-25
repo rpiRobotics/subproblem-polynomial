@@ -10,4 +10,4 @@ Three pairs of intersecting axes
 
 `crx.mpl`: Maple file to find and solve resultant univariate polynomial.
 
-`crx_out.txt`: Output from Maple
+`crx_out.txt`: Output from Maple.
